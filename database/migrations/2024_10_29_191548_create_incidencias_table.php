@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('descripcion');
             $table->string('archivo')->nullable(); // Ruta del archivo JPG
             $table->string('laboratorio'); // Ejemplo: "lab1", "lab2"
+            $table->string('estado'); // estado
             $table->timestamps(); // Campos created_at y updated_at
         });
     }

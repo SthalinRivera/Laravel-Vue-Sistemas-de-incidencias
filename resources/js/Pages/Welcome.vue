@@ -1,31 +1,58 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { useToast } from "vue-toastification";
+import { ref } from 'vue';
+import axios from 'axios';
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
+    canLogin: Boolean,
+    canRegister: Boolean,
+    laravelVersion: { type: String, required: true },
+    phpVersion: { type: String, required: true },
 });
 
-const toast = useToast();
+const dni = ref('');
+const titulo = ref('');
+const descripcion = ref('');
+const archivo = ref(null);
+const laboratorio = ref('lab1');
+const estado = ref('pendiente');
+const showMessage = ref(false);
 
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
+function handleFileUpload(event) {
+    archivo.value = event.target.files[0];
+}
+
+async function submitForm() {
+    const formData = new FormData();
+    formData.append('dni', dni.value);
+    formData.append('titulo', titulo.value);
+    formData.append('descripcion', descripcion.value);
+    formData.append('laboratorio', laboratorio.value);
+    formData.append('estado', estado.value);
+    if (archivo.value) {
+        formData.append('archivo', archivo.value);
+    }
+
+    try {
+        await axios.post('/api/incidencias', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        showMessage.value = true;
+        setTimeout(() => (showMessage.value = false), 3000);
+
+        // Limpiar campos
+        dni.value = '';
+        titulo.value = '';
+        descripcion.value = '';
+        archivo.value = null;
+        laboratorio.value = 'lab1';
+        
+        // Limpiar input de archivo
+        document.getElementById('fileInput').value = '';
+    } catch (error) {
+        alert('Error al registrar la incidencia. Intenta nuevamente.');
+    }
 }
 </script>
 
@@ -57,27 +84,35 @@ function handleImageError() {
 
             <main class="lg:col-span-1">
                 <div class="bg-white p-8 rounded-lg shadow-md ring-1 ring-gray-100 dark:bg-zinc-900 dark:ring-zinc-800">
-                    <h2 class="text-2xl font-semibold mb-2 text-gray-700 dark:text-gray-200 text-center">Registrar
-                        Incidencia</h2>
-                    <form @submit.prevent="submitForm" enctype="multipart/form-data" class="space-y-2">
+                    <h2 class="text-2xl font-semibold mb-2 text-gray-700 dark:text-gray-200 text-center">Registrar Incidencia</h2>
 
-                        <!-- Campo de DNI -->
+                    <div v-if="showMessage" class="text-green-500 text-center mb-4">
+                        Incidencia registrada con éxito.
+                    </div>
+
+                    <form @submit.prevent="submitForm" enctype="multipart/form-data" class="space-y-2">
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">DNI</label>
                             <input type="text" v-model="dni"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 required />
+                                
                         </div>
 
-                        <!-- Campo de Título -->
                         <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Título</label>
-                            <input type="text" v-model="titulo"
+                            <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Categoria</label>
+                                <select v-model="titulo"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required />
+                                required>
+                                <option value="Equipo">Equipo</option>
+                                <option value="Red">Red</option>
+                                <option value="Seguridad">Seguridad</option>
+                                <option value="Infraestructura">Infraestructura</option>
+                                <option value="Soporte">Soporte</option>
+                          
+                            </select>
                         </div>
 
-                        <!-- Campo de Descripción -->
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
                             <textarea v-model="descripcion"
@@ -86,15 +121,12 @@ function handleImageError() {
                                 rows="4" required></textarea>
                         </div>
 
-                        <!-- Campo de Archivo JPG -->
                         <div>
-                            <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Archivo
-                                (JPG)</label>
-                            <input type="file" @change="handleFileUpload" accept="image/jpeg"
+                            <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Archivo (JPG)</label>
+                            <input id="fileInput" ref="fileInput" type="file" @change="handleFileUpload" accept="image/jpeg"
                                 class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         </div>
 
-                        <!-- Selector de Laboratorio -->
                         <div>
                             <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Laboratorio</label>
                             <select v-model="laboratorio"
@@ -117,7 +149,6 @@ function handleImageError() {
                             </select>
                         </div>
 
-                        <!-- Botón de Enviar -->
                         <button type="submit"
                             class="w-full py-3 px-4 bg-blue-500 text-white font-bold rounded-md transition hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                             Guardar
@@ -126,7 +157,6 @@ function handleImageError() {
                 </div>
             </main>
 
-            <!-- Imagen a la derecha -->
             <aside class="lg:col-span-1 flex items-center justify-center">
                 <img
                     src="/fondo_incidencia.jpg"
@@ -141,57 +171,6 @@ function handleImageError() {
     </div>
 </template>
 
-<script>
-export default {
-    
-    data() {
-        return {
-            dni: '',
-            titulo: '',
-            descripcion: '',
-            archivo: null,
-            laboratorio: 'lab1',
-            estado: 'pendiente'
-        };
-    },
-    methods: {
-        handleFileUpload(event) {
-            this.archivo = event.target.files[0];
-        },
-        async submitForm() {
-            const formData = new FormData();
-            formData.append('dni', this.dni);
-            formData.append('titulo', this.titulo);
-            formData.append('descripcion', this.descripcion);
-            formData.append('laboratorio', this.laboratorio);
-            formData.append('estado', this.estado);
-            if (this.archivo) {
-                formData.append('archivo', this.archivo);
-            }
-
-            try {
-                await axios.post('/api/incidencias', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
-                // Muestra el toast de éxito
-                toast.success('Incidencia registrada con éxito.');
-
-                // Limpiar campos
-                this.dni = '';
-                this.titulo = '';
-                this.descripcion = '';
-                this.archivo = null;
-                this.laboratorio = 'lab1';
-            } catch (error) {
-                toast.error('Error al registrar la incidencia. Intenta nuevamente.');
-            }
-        },
-    },
-};
-</script>
-
 <style scoped>
-/* Aquí puedes añadir estilos adicionales */
+/* Puedes añadir más estilos aquí */
 </style>

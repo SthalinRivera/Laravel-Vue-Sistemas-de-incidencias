@@ -46,12 +46,26 @@ class IncidenciaController extends Controller
         return response()->json(['message' => 'Incidencia registrada exitosamente'], 201);
     }
 
-    public function destroy($id)
-{
-    $incidencia = Incidencia::findOrFail($id);
-    $incidencia->delete();
+    public function actualizarEstado(Request $request, $id)
+    {
+        $incidencia = Incidencia::findOrFail($id);
+        $incidencia->estado = $request->estado;
+        $incidencia->save();
+    
+        return response()->json(['message' => 'Estado actualizado correctamente']);
+    }
 
-    return response()->json(['message' => 'Incidencia eliminada correctamente.']);
-}
+
+    public function contarIncidencias()
+    {
+        $totales = [
+            'pendiente' => Incidencia::where('estado', 'pendiente')->count(),
+            'recibido' => Incidencia::where('estado', 'recibido')->count(),
+            'resuelto' => Incidencia::where('estado', 'resuelto')->count(),
+            'en_proceso' => Incidencia::where('estado', 'en proceso')->count(),
+        ];
+    
+        return response()->json($totales);
+    }
 
 }

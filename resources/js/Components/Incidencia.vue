@@ -8,9 +8,13 @@
                         <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">ID</th>
                         <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">
                             Descripción</th>
+                        <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">
+                            titulo</th>
                         <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">Imagen
                         </th>
                         <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">Fecha
+                        </th>
+                        <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">Estado
                         </th>
                         <th class="border border-gray-300 px-4 py-2 text-left text-gray-600 dark:text-gray-300">Acciones
                         </th>
@@ -19,18 +23,34 @@
                 <tbody>
                     <tr v-for="incidencia in incidencias" :key="incidencia.id"
                         class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                        <td class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300">{{ incidencia.id }}</td>
-                        <td class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300 ">{{ incidencia.descripcion }}
+                        <td
+                            class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                            {{ incidencia.id }}</td>
+                        <td
+                            class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                            {{ incidencia.titulo }}</td>
+                        <td
+                            class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300 ">
+                            {{ incidencia.descripcion }}
                         </td>
                         <td class="border border-gray-300 px-4 py-2 dark:border-gray-600">
                             <img :src="incidencia.imagen_url" alt="Imagen de Incidencia"
                                 class="h-16 w-16 object-cover rounded-md" />
                         </td>
-                        <td class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300">{{ incidencia.created_at }}
+                        <td
+                            class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                            {{ incidencia.created_at }}
+                        </td>
+                        <td
+                            class="border border-gray-300 px-4 py-2 dark:border-gray-600 text-gray-600 dark:text-gray-300 ">
+                            {{ incidencia.estado }}
                         </td>
                         <td class="border border-gray-300 px-4 py-2 dark:border-gray-600">
-                            <button @click="eliminarIncidencia(incidencia.id)"
-                                class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-500">Eliminar</button>
+                            <button 
+        @click="actualizarEstado(incidencia.id, 'recibido')" 
+        class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
+        Seguimiento
+    </button>
                         </td>
                     </tr>
                 </tbody>
@@ -58,12 +78,22 @@ export default {
             }
         };
 
-        const eliminarIncidencia = async (id) => {
+        const actualizarEstado = async (id, nuevoEstado) => {
             try {
-                await fetch(`/api/incidencias/${id}`, { method: 'DELETE' });
-                obtenerIncidencias(); // Refresca la lista después de eliminar
+                const response = await fetch(`/api/incidencias/${id}`, {
+                    method: 'PATCH', // Utiliza PATCH para actualizar un campo específico
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ estado: nuevoEstado }),
+                });
+                if (response.ok) {
+                    obtenerIncidencias(); // Refresca la lista después de actualizar
+                } else {
+                    console.error('Error al actualizar el estado de la incidencia');
+                }
             } catch (error) {
-                console.error('Error al eliminar la incidencia:', error);
+                console.error('Error al actualizar la incidencia:', error);
             }
         };
 
@@ -71,7 +101,7 @@ export default {
 
         return {
             incidencias,
-            eliminarIncidencia,
+            actualizarEstado,
         };
     },
 };

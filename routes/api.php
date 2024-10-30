@@ -11,3 +11,5 @@ Route::get('/user', function (Request $request) {
 Route::post('/incidencias', [IncidenciaController::class, 'store']);
 Route::get('/incidencias', [IncidenciaController::class, 'index']);
 Route::delete('/incidencias/{id}', [IncidenciaController::class, 'destroy']);
+Route::patch('/incidencias/{id}', [IncidenciaController::class, 'actualizarEstado']);
+Route::get('/incidencias/totales', [IncidenciaController::class, 'contarIncidencias']);
